@@ -1,0 +1,215 @@
+# Liquidity simulation: default configuration (SYNTHETIC DATA).
+# Copy to data/liquidity/config.yaml and edit; never edit this file for a single run.
+# Amounts ending in _rc are in meta.reporting_currency; _local in the item currency. Rates are annual decimals.
+
+meta:
+  as_of_date: 2026-09-30        # must be a month-end
+  history_months: 24
+  horizon_days: 365             # daily stressed / forecast projection
+  reporting_currency: USD      # all *_rc columns are in this currency; it must have rate_to_rc: 1.0
+
+sizes:                          # --size picks one; values override the defaults below
+  small:  {contract_scale: 0.1, history_months: 12, customers: 60,  suppliers: 80}
+  medium: {contract_scale: 1.0, history_months: 24, customers: 300, suppliers: 400}
+
+currencies:                     # rate_to_rc = value of 1 unit in the reporting currency at as-of
+  USD: {name: US Dollar,       rate_to_rc: 1.0,        annual_drift: 0.0,   annual_vol: 0.0,  base_rate: 0.045}
+  EUR: {name: Euro,            rate_to_rc: 1.08,       annual_drift: 0.0,   annual_vol: 0.07, base_rate: 0.025}
+  VND: {name: Vietnamese Dong, rate_to_rc: 0.0000395,  annual_drift: -0.02, annual_vol: 0.03, base_rate: 0.055}
+
+# ---------------------------------------------------------------- BANK
+bank:
+  code: BANK
+  name: SimBank (synthetic)
+  total_assets_rc: 10.0e+9
+  balance_growth_annual: 0.06   # older contracts / balances are smaller
+  currency_mix: {VND: 0.65, USD: 0.30, EUR: 0.05}   # default per product
+  hqla:
+    haircuts: {L1: 0.0, L2A: 0.15, L2B: 0.50}
+    cap_l2: 0.40                # Level 2 max share of HQLA
+    cap_l2b: 0.15               # Level 2B max share of HQLA
+    encumbered_share: {L1: 0.15, L2A: 0.10, L2B: 0.0}
+    price_vol_monthly: {L1: 0.004, L2A: 0.012, L2B: 0.025}
+  lcr_inflow_cap: 0.75
+  nsfr_encumbered_rsf: 1.0
+  nmd_vol_monthly: 0.02         # month-to-month noise of non-maturity balances
+
+  # class: amortising (monthly annuity) | bullet_m (term in months, coupon every coupon_months)
+  #        bullet_d (term in days, principal+interest at maturity) | nmd (non-maturity, monthly interest)
+  #        static (no cash flows) | facility (off-balance undrawn commitment) | event (scenario-only)
+  # share: of total assets (assets), of total liabilities+equity (liabilities), of total assets as undrawn (off-BS)
+  # lcr.basis: hqla | balance (rate x balance) | due_30d (rate x principal due within 30 days) | none
+  # nsfr factors by residual maturity: lt6m, m6_1y, ge1y  (asf for liabilities, rsf for assets / off-BS)
+  products:
+    CASH_CB:        {name: Cash & central bank reserves, side: Asset, category: Cash & Reserves, segment: CENTRAL_BANK, class: static, share: 0.05, live_contracts: 3,
+                     currency_mix: {VND: 0.6, USD: 0.35, EUR: 0.05}, hqla_level: L1, lcr: {basis: hqla}, nsfr: {lt6m: 0.0, m6_1y: 0.0, ge1y: 0.0}}
+    SEC_L1:         {name: Government bonds (Level 1), side: Asset, category: Securities, segment: SOVEREIGN, class: bullet_m, share: 0.10, live_contracts: 60,
+                     term_months: [12, 120], coupon_months: 6, rate_spread: 0.0, hqla_level: L1, lcr: {basis: hqla}, nsfr: {lt6m: 0.05, m6_1y: 0.05, ge1y: 0.05}}
+    SEC_L2A:        {name: Covered & AA corporate bonds (Level 2A), side: Asset, category: Securities, segment: CORPORATE, class: bullet_m, share: 0.04, live_contracts: 40,
+                     term_months: [12, 84], coupon_months: 6, rate_spread: 0.008, hqla_level: L2A, lcr: {basis: hqla}, nsfr: {lt6m: 0.15, m6_1y: 0.15, ge1y: 0.15}}
+    SEC_L2B:        {name: BBB corporate bonds (Level 2B), side: Asset, category: Securities, segment: CORPORATE, class: bullet_m, share: 0.015, live_contracts: 25,
+                     term_months: [12, 60], coupon_months: 6, rate_spread: 0.02, hqla_level: L2B, lcr: {basis: hqla}, nsfr: {lt6m: 0.50, m6_1y: 0.50, ge1y: 0.50}}
+    SEC_NONHQLA:    {name: Other securities (non-HQLA), side: Asset, category: Securities, segment: CORPORATE, class: bullet_m, share: 0.02, live_contracts: 30,
+                     term_months: [6, 60], coupon_months: 6, rate_spread: 0.03, lcr: {basis: due_30d, rate: 1.0, flow: inflow}, nsfr: {lt6m: 0.50, m6_1y: 0.50, ge1y: 0.85}}
+    IB_PLACE:       {name: Interbank placements, side: Asset, category: Interbank, segment: FI, class: bullet_d, share: 0.05, live_contracts: 40,
+                     term_days: [7, 180], rate_spread: 0.002, lcr: {basis: due_30d, rate: 1.0, flow: inflow}, nsfr: {lt6m: 0.15, m6_1y: 0.50, ge1y: 1.0}}
+    LOAN_MORT:      {name: Residential mortgages, side: Asset, category: Loans, segment: RETAIL, class: amortising, share: 0.25, live_contracts: 1500,
+                     term_months: [120, 300], rate_spread: 0.02, lcr: {basis: due_30d, rate: 0.5, flow: inflow}, nsfr: {lt6m: 0.50, m6_1y: 0.50, ge1y: 0.65}}
+    LOAN_RET:       {name: Consumer loans, side: Asset, category: Loans, segment: RETAIL, class: amortising, share: 0.10, live_contracts: 1200,
+                     term_months: [12, 60], rate_spread: 0.06, lcr: {basis: due_30d, rate: 0.5, flow: inflow}, nsfr: {lt6m: 0.50, m6_1y: 0.50, ge1y: 0.85}}
+    LOAN_SME:       {name: SME loans, side: Asset, category: Loans, segment: SME, class: amortising, share: 0.12, live_contracts: 600,
+                     term_months: [12, 60], rate_spread: 0.04, lcr: {basis: due_30d, rate: 0.5, flow: inflow}, nsfr: {lt6m: 0.50, m6_1y: 0.50, ge1y: 0.85}}
+    LOAN_CORP:      {name: Corporate loans, side: Asset, category: Loans, segment: CORPORATE, class: bullet_m, share: 0.22, live_contracts: 300,
+                     term_months: [3, 84], coupon_months: 3, rate_spread: 0.025, lcr: {basis: due_30d, rate: 0.5, flow: inflow}, nsfr: {lt6m: 0.50, m6_1y: 0.50, ge1y: 0.85}}
+    OTHER_ASSET:    {name: Fixed & other assets, side: Asset, category: Other, segment: NA, class: static, share: 0.035, live_contracts: 3,
+                     lcr: {basis: none}, nsfr: {lt6m: 1.0, m6_1y: 1.0, ge1y: 1.0}}
+
+    DEP_RET_STABLE: {name: Retail deposits - stable (insured), side: Liability, category: Retail Deposits, segment: RETAIL, class: nmd, share: 0.22, live_contracts: 400,
+                     rate_spread: -0.035, lcr: {basis: balance, rate: 0.05, flow: outflow}, nsfr: {lt6m: 0.95, m6_1y: 0.95, ge1y: 0.95}}
+    DEP_RET_LESS:   {name: Retail deposits - less stable, side: Liability, category: Retail Deposits, segment: RETAIL, class: nmd, share: 0.10, live_contracts: 200,
+                     rate_spread: -0.03, lcr: {basis: balance, rate: 0.10, flow: outflow}, nsfr: {lt6m: 0.90, m6_1y: 0.90, ge1y: 0.90}}
+    DEP_RET_TERM:   {name: Retail term deposits, side: Liability, category: Retail Deposits, segment: RETAIL, class: bullet_m, share: 0.15, live_contracts: 500,
+                     term_months: [1, 24], coupon_months: 1, rate_spread: 0.0, lcr: {basis: due_30d, rate: 0.10, flow: outflow}, nsfr: {lt6m: 0.90, m6_1y: 0.90, ge1y: 1.0}}
+    DEP_OPER:       {name: Corporate operational deposits, side: Liability, category: Wholesale Deposits, segment: CORPORATE, class: nmd, share: 0.10, live_contracts: 150,
+                     rate_spread: -0.03, lcr: {basis: balance, rate: 0.25, flow: outflow}, nsfr: {lt6m: 0.50, m6_1y: 0.50, ge1y: 0.50}}
+    DEP_CORP_NONOP: {name: Corporate non-operational term deposits, side: Liability, category: Wholesale Deposits, segment: CORPORATE, class: bullet_m, share: 0.12, live_contracts: 150,
+                     term_months: [1, 12], coupon_months: 1, rate_spread: -0.002, lcr: {basis: due_30d, rate: 0.40, flow: outflow}, nsfr: {lt6m: 0.50, m6_1y: 0.50, ge1y: 1.0}}
+    DEP_FI:         {name: Financial institution deposits, side: Liability, category: Wholesale Deposits, segment: FI, class: bullet_d, share: 0.05, live_contracts: 40,
+                     term_days: [7, 90], rate_spread: 0.0, lcr: {basis: due_30d, rate: 1.0, flow: outflow}, nsfr: {lt6m: 0.0, m6_1y: 0.50, ge1y: 1.0}}
+    IB_BORROW:      {name: Interbank borrowing, side: Liability, category: Interbank, segment: FI, class: bullet_d, share: 0.05, live_contracts: 30,
+                     term_days: [1, 90], rate_spread: 0.001, lcr: {basis: due_30d, rate: 1.0, flow: outflow}, nsfr: {lt6m: 0.0, m6_1y: 0.50, ge1y: 1.0}}
+    BOND_ISSUED:    {name: Senior bonds issued, side: Liability, category: Debt Securities, segment: FI, class: bullet_m, share: 0.07, live_contracts: 8,
+                     term_months: [24, 60], coupon_months: 6, rate_spread: 0.012, currency_mix: {USD: 0.6, VND: 0.4},
+                     lcr: {basis: due_30d, rate: 1.0, flow: outflow}, nsfr: {lt6m: 0.0, m6_1y: 0.50, ge1y: 1.0}}
+    OTHER_LIAB:     {name: Other liabilities, side: Liability, category: Other, segment: NA, class: static, share: 0.04, live_contracts: 3,
+                     lcr: {basis: none}, nsfr: {lt6m: 0.0, m6_1y: 0.0, ge1y: 0.0}}
+    EQUITY:         {name: Equity & capital, side: Equity, category: Equity, segment: NA, class: static, share: 0.10, live_contracts: 1, currency_mix: {VND: 1.0},
+                     lcr: {basis: none}, nsfr: {lt6m: 1.0, m6_1y: 1.0, ge1y: 1.0}}
+
+    FAC_RET:        {name: Undrawn retail credit lines, side: Off-Balance, category: Committed Facilities, segment: RETAIL, class: facility, share: 0.03, live_contracts: 200,
+                     lcr: {basis: balance, rate: 0.05, flow: outflow}, nsfr: {lt6m: 0.05, m6_1y: 0.05, ge1y: 0.05}}
+    FAC_CORP_CREDIT: {name: Undrawn corporate credit facilities, side: Off-Balance, category: Committed Facilities, segment: CORPORATE, class: facility, share: 0.05, live_contracts: 100,
+                     lcr: {basis: balance, rate: 0.10, flow: outflow}, nsfr: {lt6m: 0.05, m6_1y: 0.05, ge1y: 0.05}}
+    FAC_CORP_LIQ:   {name: Undrawn corporate liquidity facilities, side: Off-Balance, category: Committed Facilities, segment: CORPORATE, class: facility, share: 0.01, live_contracts: 20,
+                     lcr: {basis: balance, rate: 0.30, flow: outflow}, nsfr: {lt6m: 0.05, m6_1y: 0.05, ge1y: 0.05}}
+    FAC_FI:         {name: Undrawn facilities to financial institutions, side: Off-Balance, category: Committed Facilities, segment: FI, class: facility, share: 0.005, live_contracts: 10,
+                     lcr: {basis: balance, rate: 0.40, flow: outflow}, nsfr: {lt6m: 0.05, m6_1y: 0.05, ge1y: 0.05}}
+    DERIV_COLL:     {name: Derivative collateral calls, side: Off-Balance, category: Derivatives, segment: FI, class: event, share: 0.0, live_contracts: 0, currency_mix: {USD: 1.0},
+                     lcr: {basis: none}, nsfr: {lt6m: 0.0, m6_1y: 0.0, ge1y: 0.0}}
+
+# ---------------------------------------------------------------- CORPORATE
+corporate:
+  group_code: CORP_GROUP
+  group_name: SimCorp Group (synthetic)
+  revenue_rc_annual: 500.0e+6
+  revenue_growth_annual: 0.06
+  seasonality: [0.85, 0.85, 0.95, 1.0, 1.0, 1.0, 0.95, 0.95, 1.05, 1.1, 1.15, 1.15]   # Jan..Dec
+  cogs_ratio: 0.60
+  payroll_ratio: 0.15          # paid monthly on the 25th
+  opex_ratio: 0.08             # rent & overheads, paid 1st business day
+  tax_ratio: 0.03              # paid quarterly on the 15th of Jan/Apr/Jul/Oct
+  capex_ratio: 0.05            # lumpy monthly
+  avg_ar_invoice_rc: 25000
+  avg_ap_invoice_rc: 15000
+  ar_terms_days: {30: 0.5, 45: 0.3, 60: 0.2}
+  ap_terms_days: {30: 0.4, 45: 0.3, 60: 0.3}
+  customer_delay_mean_days: 7  # average late payment
+  key_accounts: 5              # top customers flagged is_key_account
+  entities:
+    CORP_US: {name: SimCorp US,      currency: USD, revenue_share: 0.5, min_cash_rc: 15.0e+6, opening_cash_rc: 40.0e+6,
+              dividend: {month: 5, day: 15, amount_rc: 20.0e+6}}
+    CORP_EU: {name: SimCorp Europe,  currency: EUR, revenue_share: 0.3, min_cash_rc: 8.0e+6,  opening_cash_rc: 20.0e+6}
+    CORP_VN: {name: SimCorp Vietnam, currency: VND, revenue_share: 0.2, min_cash_rc: 5.0e+6,  opening_cash_rc: 12.0e+6}
+  facilities:
+    RCF_US: {entity: CORP_US, type: RCF,       currency: USD, limit_rc: 60.0e+6,  rate_spread: 0.020, maturity: 2028-06-30, covenant: "Net debt / EBITDA <= 3.0x"}
+    TL_US:  {entity: CORP_US, type: TERM,      currency: USD, amount_rc: 120.0e+6, rate_spread: 0.025, start: 2022-06-30, maturity: 2029-06-30, covenant: "Interest cover >= 4.0x"}
+    RCF_EU: {entity: CORP_EU, type: RCF,       currency: EUR, limit_rc: 25.0e+6,  rate_spread: 0.018, maturity: 2027-12-31, covenant: "Net debt / EBITDA <= 3.0x"}
+    OD_VN:  {entity: CORP_VN, type: OVERDRAFT, currency: VND, limit_rc: 10.0e+6,  rate_spread: 0.020, maturity: 2027-03-31, covenant: "Minimum cash >= USD 5M equivalent"}
+  rcf_target_cash_multiple: 2.5  # history: repay revolvers when cash > multiple x min cash
+
+# ---------------------------------------------------------------- SCENARIOS
+# Every scenario inherits BASE drivers and overrides some. REVERSE scales the (COMBINED - BASE)
+# shock by a factor found by bisection so that the bank survival horizon = target_survival_days.
+scenarios:
+  ACT:      {name: Actual,            type: actual,   order: 0, description: "Historical actuals (no projection)."}
+  BASE:     {name: Baseline,          type: baseline, order: 1, description: "Business-as-usual projection; contractual flows with normal rollover and modest deposit growth."}
+  IDIO:     {name: Idiosyncratic,     type: stress,   order: 2, description: "Name-specific shock (rating downgrade) - deposit run-off, wholesale non-renewal, collateral calls; corporate loses its largest customer."}
+  MARKET:   {name: Market-wide,       type: stress,   order: 3, description: "Systemic shock - HQLA price falls, interbank market closes, VND/EUR depreciate, facilities drawn; corporate sales fall and banks cut credit lines."}
+  COMBINED: {name: Combined,          type: stress,   order: 4, description: "Idiosyncratic and market-wide shocks at the same time (severe but plausible)."}
+  REVERSE:  {name: Reverse stress,    type: reverse,  order: 5, based_on: COMBINED, target_survival_days: 30, description: "Combined shock scaled until the bank survives exactly the target number of days."}
+
+scenario_drivers:
+  BASE:
+    lcr_outflow_multiplier: 1.0
+    hqla_haircut_addon: {L1: 0.0, L2A: 0.0, L2B: 0.0}
+    fx_shock: {USD: 0.0, EUR: 0.0, VND: 0.0}                     # change in USD value of 1 unit
+    nmd_runoff_30d:  {DEP_RET_STABLE: 0.0,   DEP_RET_LESS: 0.0,   DEP_OPER: 0.0}     # cumulative share of balance lost by day 30
+    nmd_runoff_365d: {DEP_RET_STABLE: -0.04, DEP_RET_LESS: -0.03, DEP_OPER: -0.02}   # negative = growth
+    rollover:        # share of maturing principal renewed (liabilities) / re-lent (assets)
+      {DEP_RET_TERM: 0.95, DEP_CORP_NONOP: 0.90, DEP_FI: 0.90, IB_BORROW: 1.0, BOND_ISSUED: 0.80,
+       LOAN_MORT: 1.0, LOAN_RET: 1.0, LOAN_SME: 1.0, LOAN_CORP: 1.0, IB_PLACE: 1.0, SEC_NONHQLA: 1.0}
+    facility_drawdown_30d:  {FAC_RET: 0.0, FAC_CORP_CREDIT: 0.0, FAC_CORP_LIQ: 0.0, FAC_FI: 0.0}
+    facility_drawdown_365d: {FAC_RET: 0.02, FAC_CORP_CREDIT: 0.03, FAC_CORP_LIQ: 0.0, FAC_FI: 0.0}
+    collateral_call_pct_assets: 0.0
+    collateral_call_day: 2
+    corp_dso_shift_days: 0
+    corp_revenue_shock: 0.0          # reached after 30 days, linear ramp
+    corp_key_customer_defaults: 0    # number of top customers that stop paying from day 1
+    corp_supplier_terms_cut_days: 0
+    corp_rcf_availability: 1.0       # share of facility limits still available
+    corp_capex_deferral: 0.0
+    corp_dividend_suspended: 0
+  IDIO:
+    lcr_outflow_multiplier: 1.3
+    nmd_runoff_30d:  {DEP_RET_STABLE: 0.06, DEP_RET_LESS: 0.15, DEP_OPER: 0.20}
+    nmd_runoff_365d: {DEP_RET_STABLE: 0.12, DEP_RET_LESS: 0.30, DEP_OPER: 0.35}
+    rollover:
+      {DEP_RET_TERM: 0.75, DEP_CORP_NONOP: 0.40, DEP_FI: 0.0, IB_BORROW: 0.20, BOND_ISSUED: 0.0,
+       LOAN_MORT: 0.90, LOAN_RET: 0.70, LOAN_SME: 0.70, LOAN_CORP: 0.60, IB_PLACE: 0.0, SEC_NONHQLA: 0.0}
+    facility_drawdown_30d:  {FAC_RET: 0.03, FAC_CORP_CREDIT: 0.08, FAC_CORP_LIQ: 0.20, FAC_FI: 0.30}
+    facility_drawdown_365d: {FAC_RET: 0.08, FAC_CORP_CREDIT: 0.15, FAC_CORP_LIQ: 0.40, FAC_FI: 0.50}
+    collateral_call_pct_assets: 0.006
+    corp_dso_shift_days: 10
+    corp_key_customer_defaults: 1
+    corp_dividend_suspended: 1
+  MARKET:
+    lcr_outflow_multiplier: 1.2
+    hqla_haircut_addon: {L1: 0.03, L2A: 0.10, L2B: 0.20}
+    fx_shock: {USD: 0.0, EUR: -0.08, VND: -0.12}
+    nmd_runoff_30d:  {DEP_RET_STABLE: 0.03, DEP_RET_LESS: 0.08, DEP_OPER: 0.10}
+    nmd_runoff_365d: {DEP_RET_STABLE: 0.06, DEP_RET_LESS: 0.15, DEP_OPER: 0.20}
+    rollover:
+      {DEP_RET_TERM: 0.85, DEP_CORP_NONOP: 0.60, DEP_FI: 0.30, IB_BORROW: 0.0, BOND_ISSUED: 0.0,
+       LOAN_MORT: 1.0, LOAN_RET: 0.90, LOAN_SME: 0.90, LOAN_CORP: 0.85, IB_PLACE: 0.0, SEC_NONHQLA: 0.0}
+    facility_drawdown_30d:  {FAC_RET: 0.05, FAC_CORP_CREDIT: 0.15, FAC_CORP_LIQ: 0.30, FAC_FI: 0.40}
+    facility_drawdown_365d: {FAC_RET: 0.10, FAC_CORP_CREDIT: 0.25, FAC_CORP_LIQ: 0.50, FAC_FI: 0.60}
+    collateral_call_pct_assets: 0.003
+    corp_revenue_shock: -0.15
+    corp_supplier_terms_cut_days: 15
+    corp_rcf_availability: 0.5
+    corp_capex_deferral: 0.3
+  COMBINED:
+    lcr_outflow_multiplier: 1.5
+    hqla_haircut_addon: {L1: 0.03, L2A: 0.10, L2B: 0.20}
+    fx_shock: {USD: 0.0, EUR: -0.08, VND: -0.12}
+    nmd_runoff_30d:  {DEP_RET_STABLE: 0.06, DEP_RET_LESS: 0.15, DEP_OPER: 0.20}
+    nmd_runoff_365d: {DEP_RET_STABLE: 0.18, DEP_RET_LESS: 0.40, DEP_OPER: 0.50}
+    rollover:
+      {DEP_RET_TERM: 0.60, DEP_CORP_NONOP: 0.30, DEP_FI: 0.0, IB_BORROW: 0.0, BOND_ISSUED: 0.0,
+       LOAN_MORT: 0.90, LOAN_RET: 0.60, LOAN_SME: 0.60, LOAN_CORP: 0.50, IB_PLACE: 0.0, SEC_NONHQLA: 0.0}
+    facility_drawdown_30d:  {FAC_RET: 0.06, FAC_CORP_CREDIT: 0.20, FAC_CORP_LIQ: 0.40, FAC_FI: 0.50}
+    facility_drawdown_365d: {FAC_RET: 0.12, FAC_CORP_CREDIT: 0.35, FAC_CORP_LIQ: 0.60, FAC_FI: 0.70}
+    collateral_call_pct_assets: 0.008
+    corp_dso_shift_days: 15
+    corp_revenue_shock: -0.20
+    corp_key_customer_defaults: 2
+    corp_supplier_terms_cut_days: 20
+    corp_rcf_availability: 0.4
+    corp_capex_deferral: 0.5
+    corp_dividend_suspended: 1
+
+# ---------------------------------------------------------------- VALIDATION (plausibility)
+validation:
+  base_lcr_range: [1.10, 2.00]
+  base_nsfr_min: 1.00
+  reverse_tolerance_days: 3
