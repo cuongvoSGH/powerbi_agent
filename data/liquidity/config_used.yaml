@@ -1,0 +1,1157 @@
+meta:
+  as_of_date: 2026-09-30
+  history_months: 24
+  horizon_days: 182
+  reporting_currency: EUR
+  size: medium
+  seed: 42
+  entity: bank
+sizes:
+  small:
+    contract_scale: 0.1
+    history_months: 12
+    customers: 60
+    suppliers: 80
+  medium:
+    contract_scale: 1.0
+    history_months: 24
+    customers: 300
+    suppliers: 400
+currencies:
+  EUR:
+    name: Euro
+    rate_to_rc: 1.0
+    annual_drift: 0.0
+    annual_vol: 0.0
+    base_rate: 0.025
+  USD:
+    name: US Dollar
+    rate_to_rc: 0.92
+    annual_drift: 0.0
+    annual_vol: 0.07
+    base_rate: 0.045
+  GBP:
+    name: Pound Sterling
+    rate_to_rc: 1.17
+    annual_drift: 0.0
+    annual_vol: 0.05
+    base_rate: 0.04
+time_buckets:
+  non_maturity_key: BNM
+  buckets:
+  - - B01
+    - Overnight
+    - 1
+    - 1
+  - - B02
+    - '>1D-2D'
+    - 2
+    - 2
+  - - B03
+    - '>2D-3D'
+    - 3
+    - 3
+  - - B04
+    - '>3D-4D'
+    - 4
+    - 4
+  - - B05
+    - '>4D-5D'
+    - 5
+    - 5
+  - - B06
+    - '>5D-6D'
+    - 6
+    - 6
+  - - B07
+    - '>6D-7D'
+    - 7
+    - 7
+  - - B08
+    - '>7D-2W'
+    - 8
+    - 14
+  - - B09
+    - '>2W-3W'
+    - 15
+    - 21
+  - - B10
+    - '>3W-30D'
+    - 22
+    - 30
+  - - B11
+    - '>30D-5W'
+    - 31
+    - 35
+  - - B12
+    - '>5W-2M'
+    - 36
+    - 61
+  - - B13
+    - '>2M-3M'
+    - 62
+    - 92
+  - - B14
+    - '>3M-4M'
+    - 93
+    - 122
+  - - B15
+    - '>4M-5M'
+    - 123
+    - 153
+  - - B16
+    - '>5M-6M'
+    - 154
+    - 183
+  - - B17
+    - '>6M-9M'
+    - 184
+    - 274
+  - - B18
+    - '>9M-12M'
+    - 275
+    - 365
+  - - B19
+    - '>12M-2Y'
+    - 366
+    - 730
+  - - B20
+    - '>2Y-5Y'
+    - 731
+    - 1826
+  - - B21
+    - '>5Y'
+    - 1827
+    - 99999
+bank:
+  code: BANK
+  name: SimBank EU (synthetic)
+  total_assets_rc: 10000000000.0
+  balance_growth_annual: 0.04
+  currency_mix:
+    EUR: 0.8
+    USD: 0.15
+    GBP: 0.05
+  hqla:
+    haircuts:
+      L1: 0.0
+      L1B: 0.07
+      L2A: 0.15
+      L2B: 0.5
+    cap_l2: 0.4
+    cap_l2b: 0.15
+    cap_l1b: 0.7
+    encumbered_share:
+      L1: 0.15
+      L1B: 0.2
+      L2A: 0.1
+      L2B: 0.0
+      CB_ELIGIBLE: 0.1
+    price_vol_monthly:
+      L1: 0.004
+      L1B: 0.006
+      L2A: 0.012
+      L2B: 0.025
+      CB_ELIGIBLE: 0.02
+    cbc_availability_day:
+      L1: 1
+      L1B: 2
+      L2A: 3
+      L2B: 5
+      CB_ELIGIBLE: 3
+  lcr_inflow_cap: 0.75
+  nsfr_encumbered_rsf: 1.0
+  nmd_vol_monthly: 0.015
+  products:
+    CASH_CB:
+      name: Cash & central bank reserves
+      side: Asset
+      category: Cash & Reserves
+      segment: CENTRAL_BANK
+      class: static
+      share: 0.06
+      live_contracts: 3
+      currency_mix:
+        EUR: 0.85
+        USD: 0.1
+        GBP: 0.05
+      hqla_level: L1
+      lcr:
+        basis: hqla
+      nsfr:
+        lt6m: 0.0
+        m6_1y: 0.0
+        ge1y: 0.0
+    SEC_L1:
+      name: EU sovereign bonds (Level 1)
+      side: Asset
+      category: Securities
+      segment: SOVEREIGN
+      class: bullet_m
+      share: 0.08
+      live_contracts: 60
+      term_months:
+      - 12
+      - 120
+      coupon_months: 12
+      rate_spread: 0.0
+      hqla_level: L1
+      lcr:
+        basis: hqla
+      nsfr:
+        lt6m: 0.0
+        m6_1y: 0.0
+        ge1y: 0.0
+    SEC_L1B_CB:
+      name: Extremely high quality covered bonds (Level 1B)
+      side: Asset
+      category: Securities
+      segment: FI
+      class: bullet_m
+      share: 0.03
+      live_contracts: 30
+      term_months:
+      - 24
+      - 120
+      coupon_months: 12
+      rate_spread: 0.004
+      hqla_level: L1B
+      lcr:
+        basis: hqla
+      nsfr:
+        lt6m: 0.07
+        m6_1y: 0.07
+        ge1y: 0.07
+    SEC_L2A:
+      name: Level 2A corporate & covered bonds
+      side: Asset
+      category: Securities
+      segment: CORPORATE
+      class: bullet_m
+      share: 0.02
+      live_contracts: 30
+      term_months:
+      - 12
+      - 84
+      coupon_months: 12
+      rate_spread: 0.008
+      hqla_level: L2A
+      lcr:
+        basis: hqla
+      nsfr:
+        lt6m: 0.15
+        m6_1y: 0.15
+        ge1y: 0.15
+    SEC_L2B_RMBS:
+      name: Level 2B RMBS
+      side: Asset
+      category: Securities
+      segment: FI
+      class: bullet_m
+      share: 0.01
+      live_contracts: 15
+      term_months:
+      - 36
+      - 120
+      coupon_months: 3
+      rate_spread: 0.012
+      hqla_level: L2B
+      hqla_haircut: 0.25
+      lcr:
+        basis: hqla
+      nsfr:
+        lt6m: 0.25
+        m6_1y: 0.25
+        ge1y: 0.25
+    SEC_L2B:
+      name: Level 2B corporate debt
+      side: Asset
+      category: Securities
+      segment: CORPORATE
+      class: bullet_m
+      share: 0.005
+      live_contracts: 15
+      term_months:
+      - 12
+      - 60
+      coupon_months: 12
+      rate_spread: 0.02
+      hqla_level: L2B
+      lcr:
+        basis: hqla
+      nsfr:
+        lt6m: 0.5
+        m6_1y: 0.5
+        ge1y: 0.5
+    SEC_NONHQLA:
+      name: ECB-eligible non-HQLA securities
+      side: Asset
+      category: Securities
+      segment: CORPORATE
+      class: bullet_m
+      share: 0.025
+      live_contracts: 30
+      term_months:
+      - 6
+      - 60
+      coupon_months: 12
+      rate_spread: 0.03
+      cb_eligible: true
+      cb_haircut: 0.12
+      lcr:
+        basis: due_30d
+        rate: 1.0
+        flow: inflow
+      nsfr:
+        lt6m: 0.5
+        m6_1y: 0.5
+        ge1y: 0.85
+    IB_PLACE:
+      name: Placements with credit institutions
+      side: Asset
+      category: Interbank
+      segment: FI
+      class: bullet_d
+      share: 0.04
+      live_contracts: 40
+      term_days:
+      - 1
+      - 180
+      rate_spread: 0.002
+      lcr:
+        basis: due_30d
+        rate: 1.0
+        flow: inflow
+      nsfr:
+        lt6m: 0.15
+        m6_1y: 0.5
+        ge1y: 1.0
+    LOAN_MORT:
+      name: Residential mortgages
+      side: Asset
+      category: Loans
+      segment: RETAIL
+      class: amortising
+      share: 0.3
+      live_contracts: 1500
+      term_months:
+      - 120
+      - 360
+      rate_spread: 0.012
+      lcr:
+        basis: due_30d
+        rate: 0.5
+        flow: inflow
+      nsfr:
+        lt6m: 0.5
+        m6_1y: 0.5
+        ge1y: 0.65
+    LOAN_RET:
+      name: Consumer loans
+      side: Asset
+      category: Loans
+      segment: RETAIL
+      class: amortising
+      share: 0.08
+      live_contracts: 1200
+      term_months:
+      - 12
+      - 84
+      rate_spread: 0.05
+      lcr:
+        basis: due_30d
+        rate: 0.5
+        flow: inflow
+      nsfr:
+        lt6m: 0.5
+        m6_1y: 0.5
+        ge1y: 0.85
+    LOAN_SME:
+      name: SME loans
+      side: Asset
+      category: Loans
+      segment: SME
+      class: amortising
+      share: 0.12
+      live_contracts: 600
+      term_months:
+      - 12
+      - 84
+      rate_spread: 0.03
+      lcr:
+        basis: due_30d
+        rate: 0.5
+        flow: inflow
+      nsfr:
+        lt6m: 0.5
+        m6_1y: 0.5
+        ge1y: 0.85
+    LOAN_CORP:
+      name: Non-financial corporate loans
+      side: Asset
+      category: Loans
+      segment: CORPORATE
+      class: bullet_m
+      share: 0.2
+      live_contracts: 300
+      term_months:
+      - 3
+      - 84
+      coupon_months: 3
+      rate_spread: 0.02
+      lcr:
+        basis: due_30d
+        rate: 0.5
+        flow: inflow
+      nsfr:
+        lt6m: 0.5
+        m6_1y: 0.5
+        ge1y: 0.85
+    OTHER_ASSET:
+      name: Fixed & other assets
+      side: Asset
+      category: Other
+      segment: NA
+      class: static
+      share: 0.03
+      live_contracts: 3
+      currency_mix:
+        EUR: 1.0
+      lcr:
+        basis: none
+      nsfr:
+        lt6m: 1.0
+        m6_1y: 1.0
+        ge1y: 1.0
+    DEP_RET_STABLE:
+      name: Retail deposits - stable (DGS-covered
+      Art. 24): null
+      side: Liability
+      category: Retail Deposits
+      segment: RETAIL
+      class: nmd
+      share: 0.2
+      live_contracts: 400
+      rate_spread: -0.02
+      lcr:
+        basis: balance
+        rate: 0.05
+        flow: outflow
+      nsfr:
+        lt6m: 0.95
+        m6_1y: 0.95
+        ge1y: 0.95
+    DEP_RET_LESS:
+      name: Retail deposits - other (Art. 25(1))
+      side: Liability
+      category: Retail Deposits
+      segment: RETAIL
+      class: nmd
+      share: 0.1
+      live_contracts: 200
+      rate_spread: -0.018
+      lcr:
+        basis: balance
+        rate: 0.1
+        flow: outflow
+      nsfr:
+        lt6m: 0.9
+        m6_1y: 0.9
+        ge1y: 0.9
+    DEP_RET_HIGHER:
+      name: Retail deposits - higher outflow category (Art. 25(2)-(3))
+      side: Liability
+      category: Retail Deposits
+      segment: RETAIL
+      class: nmd
+      share: 0.03
+      live_contracts: 80
+      rate_spread: -0.01
+      lcr:
+        basis: balance
+        rate: 0.15
+        flow: outflow
+      nsfr:
+        lt6m: 0.9
+        m6_1y: 0.9
+        ge1y: 0.9
+    DEP_RET_TERM:
+      name: Retail term deposits
+      side: Liability
+      category: Retail Deposits
+      segment: RETAIL
+      class: bullet_m
+      share: 0.12
+      live_contracts: 500
+      term_months:
+      - 1
+      - 36
+      coupon_months: 12
+      rate_spread: 0.0
+      lcr:
+        basis: due_30d
+        rate: 0.1
+        flow: outflow
+      nsfr:
+        lt6m: 0.9
+        m6_1y: 0.9
+        ge1y: 1.0
+    DEP_OPER:
+      name: Operational deposits (Art. 27)
+      side: Liability
+      category: Wholesale Deposits
+      segment: CORPORATE
+      class: nmd
+      share: 0.1
+      live_contracts: 150
+      rate_spread: -0.02
+      lcr:
+        basis: balance
+        rate: 0.25
+        flow: outflow
+      nsfr:
+        lt6m: 0.5
+        m6_1y: 0.5
+        ge1y: 0.5
+    DEP_CORP_NONOP:
+      name: Non-operational corporate deposits (Art. 28(1))
+      side: Liability
+      category: Wholesale Deposits
+      segment: CORPORATE
+      class: bullet_m
+      share: 0.11
+      live_contracts: 150
+      term_months:
+      - 1
+      - 12
+      coupon_months: 1
+      rate_spread: -0.002
+      lcr:
+        basis: due_30d
+        rate: 0.4
+        flow: outflow
+      nsfr:
+        lt6m: 0.5
+        m6_1y: 0.5
+        ge1y: 1.0
+    DEP_FI:
+      name: Deposits from financial customers (Art. 28(5))
+      side: Liability
+      category: Wholesale Deposits
+      segment: FI
+      class: bullet_d
+      share: 0.05
+      live_contracts: 40
+      term_days:
+      - 7
+      - 120
+      rate_spread: 0.0
+      lcr:
+        basis: due_30d
+        rate: 1.0
+        flow: outflow
+      nsfr:
+        lt6m: 0.0
+        m6_1y: 0.5
+        ge1y: 1.0
+    IB_BORROW:
+      name: Unsecured interbank borrowing
+      side: Liability
+      category: Interbank
+      segment: FI
+      class: bullet_d
+      share: 0.04
+      live_contracts: 30
+      term_days:
+      - 1
+      - 90
+      rate_spread: 0.001
+      lcr:
+        basis: due_30d
+        rate: 1.0
+        flow: outflow
+      nsfr:
+        lt6m: 0.0
+        m6_1y: 0.5
+        ge1y: 1.0
+    BOND_ISSUED:
+      name: Senior unsecured bonds issued
+      side: Liability
+      category: Debt Securities
+      segment: FI
+      class: bullet_m
+      share: 0.06
+      live_contracts: 10
+      term_months:
+      - 24
+      - 84
+      coupon_months: 12
+      rate_spread: 0.012
+      currency_mix:
+        EUR: 0.7
+        USD: 0.3
+      lcr:
+        basis: due_30d
+        rate: 1.0
+        flow: outflow
+      nsfr:
+        lt6m: 0.0
+        m6_1y: 0.5
+        ge1y: 1.0
+    COVERED_ISSUED:
+      name: Covered bonds issued
+      side: Liability
+      category: Debt Securities
+      segment: FI
+      class: bullet_m
+      share: 0.03
+      live_contracts: 6
+      term_months:
+      - 36
+      - 120
+      coupon_months: 12
+      rate_spread: 0.006
+      currency_mix:
+        EUR: 1.0
+      lcr:
+        basis: due_30d
+        rate: 1.0
+        flow: outflow
+      nsfr:
+        lt6m: 0.0
+        m6_1y: 0.5
+        ge1y: 1.0
+    OTHER_LIAB:
+      name: Other liabilities
+      side: Liability
+      category: Other
+      segment: NA
+      class: static
+      share: 0.06
+      live_contracts: 3
+      currency_mix:
+        EUR: 1.0
+      lcr:
+        basis: none
+      nsfr:
+        lt6m: 0.0
+        m6_1y: 0.0
+        ge1y: 0.0
+    EQUITY:
+      name: Own funds (CET1
+      AT1: null
+      T2): null
+      side: Equity
+      category: Equity
+      segment: NA
+      class: static
+      share: 0.1
+      live_contracts: 1
+      currency_mix:
+        EUR: 1.0
+      lcr:
+        basis: none
+      nsfr:
+        lt6m: 1.0
+        m6_1y: 1.0
+        ge1y: 1.0
+    FAC_RET:
+      name: Undrawn committed facilities - retail (Art. 31(3))
+      side: Off-Balance
+      category: Committed Facilities
+      segment: RETAIL
+      class: facility
+      share: 0.03
+      live_contracts: 200
+      lcr:
+        basis: balance
+        rate: 0.05
+        flow: outflow
+      nsfr:
+        lt6m: 0.05
+        m6_1y: 0.05
+        ge1y: 0.05
+    FAC_CORP_CREDIT:
+      name: Undrawn credit facilities - non-financial corporates (Art. 31(4))
+      side: Off-Balance
+      category: Committed Facilities
+      segment: CORPORATE
+      class: facility
+      share: 0.05
+      live_contracts: 100
+      lcr:
+        basis: balance
+        rate: 0.1
+        flow: outflow
+      nsfr:
+        lt6m: 0.05
+        m6_1y: 0.05
+        ge1y: 0.05
+    FAC_CORP_LIQ:
+      name: Undrawn liquidity facilities - non-financial corporates (Art. 31(5))
+      side: Off-Balance
+      category: Committed Facilities
+      segment: CORPORATE
+      class: facility
+      share: 0.01
+      live_contracts: 20
+      lcr:
+        basis: balance
+        rate: 0.3
+        flow: outflow
+      nsfr:
+        lt6m: 0.05
+        m6_1y: 0.05
+        ge1y: 0.05
+    FAC_FI:
+      name: Undrawn facilities - credit institutions (Art. 31(8))
+      side: Off-Balance
+      category: Committed Facilities
+      segment: FI
+      class: facility
+      share: 0.005
+      live_contracts: 10
+      lcr:
+        basis: balance
+        rate: 0.4
+        flow: outflow
+      nsfr:
+        lt6m: 0.05
+        m6_1y: 0.05
+        ge1y: 0.05
+    DERIV_COLL:
+      name: Collateral outflows - 3-notch downgrade (Art. 30(2))
+      side: Off-Balance
+      category: Derivatives
+      segment: FI
+      class: event
+      share: 0.0
+      live_contracts: 0
+      currency_mix:
+        EUR: 1.0
+      lcr:
+        basis: none
+      nsfr:
+        lt6m: 0.0
+        m6_1y: 0.0
+        ge1y: 0.0
+    MGMT_ACTION:
+      name: Management actions (asset sales)
+      side: Off-Balance
+      category: Management Actions
+      segment: NA
+      class: event
+      share: 0.0
+      live_contracts: 0
+      currency_mix:
+        EUR: 1.0
+      lcr:
+        basis: none
+      nsfr:
+        lt6m: 0.0
+        m6_1y: 0.0
+        ge1y: 0.0
+corporate:
+  group_code: CORP_GROUP
+  group_name: SimCorp Group (synthetic)
+  revenue_rc_annual: 500000000.0
+  revenue_growth_annual: 0.04
+  seasonality:
+  - 0.85
+  - 0.85
+  - 0.95
+  - 1.0
+  - 1.0
+  - 1.0
+  - 0.95
+  - 0.95
+  - 1.05
+  - 1.1
+  - 1.15
+  - 1.15
+  cogs_ratio: 0.6
+  payroll_ratio: 0.15
+  opex_ratio: 0.08
+  tax_ratio: 0.03
+  capex_ratio: 0.05
+  avg_ar_invoice_rc: 25000
+  avg_ap_invoice_rc: 15000
+  ar_terms_days:
+    30: 0.5
+    45: 0.3
+    60: 0.2
+  ap_terms_days:
+    30: 0.4
+    45: 0.3
+    60: 0.3
+  customer_delay_mean_days: 7
+  key_accounts: 5
+  entities:
+    CORP_EU:
+      name: SimCorp Europe
+      currency: EUR
+      revenue_share: 0.7
+      min_cash_rc: 15000000.0
+      opening_cash_rc: 40000000.0
+      dividend:
+        month: 5
+        day: 15
+        amount_rc: 15000000.0
+    CORP_UK:
+      name: SimCorp UK
+      currency: GBP
+      revenue_share: 0.3
+      min_cash_rc: 6000000.0
+      opening_cash_rc: 15000000.0
+  facilities:
+    RCF_EU:
+      entity: CORP_EU
+      type: RCF
+      currency: EUR
+      limit_rc: 60000000.0
+      rate_spread: 0.018
+      maturity: 2028-06-30
+      covenant: Net debt / EBITDA <= 3.0x
+    TL_EU:
+      entity: CORP_EU
+      type: TERM
+      currency: EUR
+      amount_rc: 100000000.0
+      rate_spread: 0.022
+      start: 2022-06-30
+      maturity: 2029-06-30
+      covenant: Interest cover >= 4.0x
+    RCF_UK:
+      entity: CORP_UK
+      type: RCF
+      currency: GBP
+      limit_rc: 20000000.0
+      rate_spread: 0.02
+      maturity: 2027-12-31
+      covenant: Net debt / EBITDA <= 3.0x
+  rcf_target_cash_multiple: 2.5
+scenarios:
+  ACT:
+    name: Actual
+    type: actual
+    order: 0
+    description: Historical actuals (no projection).
+  BASE:
+    name: Baseline
+    type: baseline
+    order: 1
+    description: 'Business-as-usual funding plan: normal rollover, modest deposit
+      growth.'
+  IDIO:
+    name: Idiosyncratic
+    type: stress
+    order: 2
+    description: 'Name-specific: 3-notch downgrade, retail and corporate deposit withdrawals,
+      wholesale non-renewal, collateral calls.'
+  MARKET:
+    name: Market-wide
+    type: stress
+    order: 3
+    description: 'System-wide: HQLA price falls, unsecured interbank market closed,
+      USD/GBP funding stress, facilities drawn.'
+  COMBINED:
+    name: Combined severe
+    type: stress
+    order: 4
+    description: Severe but plausible combination of idiosyncratic and market-wide
+      shocks (EBA GL/2018/04 para 124).
+  EXTREME:
+    name: Extreme
+    type: stress
+    order: 5
+    description: 'Extreme digital-run style shock (LiST 2019 ''extreme'' analogue):
+      fast retail and corporate outflows, full wholesale run.'
+  REVERSE:
+    name: Reverse stress
+    type: reverse
+    order: 6
+    based_on: COMBINED
+    target_survival_days: 30
+    description: COMBINED shock scaled until the bank survives the target number of
+      days (pre management actions).
+scenario_drivers:
+  BASE:
+    lcr_outflow_multiplier: 1.0
+    hqla_haircut_addon:
+      L1: 0.0
+      L1B: 0.0
+      L2A: 0.0
+      L2B: 0.0
+      CB_ELIGIBLE: 0.0
+    fx_shock:
+      EUR: 0.0
+      USD: 0.0
+      GBP: 0.0
+    nmd_runoff_30d:
+      DEP_RET_STABLE: 0.0
+      DEP_RET_LESS: 0.0
+      DEP_RET_HIGHER: 0.0
+      DEP_OPER: 0.0
+    nmd_runoff_365d:
+      DEP_RET_STABLE: -0.02
+      DEP_RET_LESS: -0.015
+      DEP_RET_HIGHER: -0.01
+      DEP_OPER: -0.01
+    rollover:
+      DEP_RET_TERM: 0.95
+      DEP_CORP_NONOP: 0.9
+      DEP_FI: 0.9
+      IB_BORROW: 1.0
+      BOND_ISSUED: 0.8
+      COVERED_ISSUED: 1.0
+      LOAN_MORT: 1.0
+      LOAN_RET: 1.0
+      LOAN_SME: 1.0
+      LOAN_CORP: 1.0
+      IB_PLACE: 1.0
+    facility_drawdown_30d:
+      FAC_RET: 0.0
+      FAC_CORP_CREDIT: 0.0
+      FAC_CORP_LIQ: 0.0
+      FAC_FI: 0.0
+    facility_drawdown_365d:
+      FAC_RET: 0.01
+      FAC_CORP_CREDIT: 0.015
+      FAC_CORP_LIQ: 0.0
+      FAC_FI: 0.0
+    downgrade_notches: 0
+    collateral_per_notch_pct_assets: 0.002
+    collateral_call_day: 2
+    mgmt_actions:
+      lending_cut:
+        start_day: 1
+        rollover_reduction: 0.0
+      asset_sale:
+        day: 30
+        pct_of_loans: 0.0
+        discount: 0.0
+    corp_dso_shift_days: 0
+    corp_revenue_shock: 0.0
+    corp_key_customer_defaults: 0
+    corp_supplier_terms_cut_days: 0
+    corp_rcf_availability: 1.0
+    corp_capex_deferral: 0.0
+    corp_dividend_suspended: 0
+  IDIO:
+    lcr_outflow_multiplier: 1.3
+    nmd_runoff_30d:
+      DEP_RET_STABLE: 0.04
+      DEP_RET_LESS: 0.1
+      DEP_RET_HIGHER: 0.2
+      DEP_OPER: 0.15
+    nmd_runoff_365d:
+      DEP_RET_STABLE: 0.08
+      DEP_RET_LESS: 0.18
+      DEP_RET_HIGHER: 0.35
+      DEP_OPER: 0.25
+    rollover:
+      DEP_RET_TERM: 0.8
+      DEP_CORP_NONOP: 0.5
+      DEP_FI: 0.1
+      IB_BORROW: 0.2
+      BOND_ISSUED: 0.0
+      COVERED_ISSUED: 0.5
+      LOAN_MORT: 0.95
+      LOAN_RET: 0.85
+      LOAN_SME: 0.85
+      LOAN_CORP: 0.8
+      IB_PLACE: 0.0
+    facility_drawdown_30d:
+      FAC_RET: 0.03
+      FAC_CORP_CREDIT: 0.08
+      FAC_CORP_LIQ: 0.2
+      FAC_FI: 0.25
+    facility_drawdown_365d:
+      FAC_RET: 0.06
+      FAC_CORP_CREDIT: 0.15
+      FAC_CORP_LIQ: 0.35
+      FAC_FI: 0.4
+    downgrade_notches: 3
+    mgmt_actions:
+      lending_cut:
+        start_day: 10
+        rollover_reduction: 0.25
+      asset_sale:
+        day: 30
+        pct_of_loans: 0.01
+        discount: 0.15
+    corp_dividend_suspended: 1
+  MARKET:
+    lcr_outflow_multiplier: 1.2
+    hqla_haircut_addon:
+      L1: 0.02
+      L1B: 0.05
+      L2A: 0.1
+      L2B: 0.2
+      CB_ELIGIBLE: 0.08
+    fx_shock:
+      EUR: 0.0
+      USD: 0.1
+      GBP: 0.05
+    nmd_runoff_30d:
+      DEP_RET_STABLE: 0.02
+      DEP_RET_LESS: 0.05
+      DEP_RET_HIGHER: 0.1
+      DEP_OPER: 0.08
+    nmd_runoff_365d:
+      DEP_RET_STABLE: 0.04
+      DEP_RET_LESS: 0.1
+      DEP_RET_HIGHER: 0.18
+      DEP_OPER: 0.15
+    rollover:
+      DEP_RET_TERM: 0.9
+      DEP_CORP_NONOP: 0.7
+      DEP_FI: 0.3
+      IB_BORROW: 0.0
+      BOND_ISSUED: 0.0
+      COVERED_ISSUED: 0.3
+      LOAN_MORT: 1.0
+      LOAN_RET: 0.95
+      LOAN_SME: 0.95
+      LOAN_CORP: 0.9
+      IB_PLACE: 0.0
+    facility_drawdown_30d:
+      FAC_RET: 0.04
+      FAC_CORP_CREDIT: 0.12
+      FAC_CORP_LIQ: 0.25
+      FAC_FI: 0.35
+    facility_drawdown_365d:
+      FAC_RET: 0.08
+      FAC_CORP_CREDIT: 0.2
+      FAC_CORP_LIQ: 0.4
+      FAC_FI: 0.5
+    downgrade_notches: 1
+    mgmt_actions:
+      lending_cut:
+        start_day: 10
+        rollover_reduction: 0.2
+      asset_sale:
+        day: 45
+        pct_of_loans: 0.01
+        discount: 0.25
+  COMBINED:
+    lcr_outflow_multiplier: 1.5
+    hqla_haircut_addon:
+      L1: 0.02
+      L1B: 0.05
+      L2A: 0.1
+      L2B: 0.2
+      CB_ELIGIBLE: 0.08
+    fx_shock:
+      EUR: 0.0
+      USD: 0.1
+      GBP: 0.05
+    nmd_runoff_30d:
+      DEP_RET_STABLE: 0.05
+      DEP_RET_LESS: 0.12
+      DEP_RET_HIGHER: 0.25
+      DEP_OPER: 0.18
+    nmd_runoff_365d:
+      DEP_RET_STABLE: 0.1
+      DEP_RET_LESS: 0.22
+      DEP_RET_HIGHER: 0.4
+      DEP_OPER: 0.3
+    rollover:
+      DEP_RET_TERM: 0.75
+      DEP_CORP_NONOP: 0.4
+      DEP_FI: 0.0
+      IB_BORROW: 0.0
+      BOND_ISSUED: 0.0
+      COVERED_ISSUED: 0.2
+      LOAN_MORT: 0.95
+      LOAN_RET: 0.8
+      LOAN_SME: 0.8
+      LOAN_CORP: 0.75
+      IB_PLACE: 0.0
+    facility_drawdown_30d:
+      FAC_RET: 0.05
+      FAC_CORP_CREDIT: 0.15
+      FAC_CORP_LIQ: 0.3
+      FAC_FI: 0.4
+    facility_drawdown_365d:
+      FAC_RET: 0.1
+      FAC_CORP_CREDIT: 0.25
+      FAC_CORP_LIQ: 0.45
+      FAC_FI: 0.55
+    downgrade_notches: 3
+    mgmt_actions:
+      lending_cut:
+        start_day: 10
+        rollover_reduction: 0.3
+      asset_sale:
+        day: 30
+        pct_of_loans: 0.015
+        discount: 0.2
+    corp_dividend_suspended: 1
+  EXTREME:
+    lcr_outflow_multiplier: 1.8
+    hqla_haircut_addon:
+      L1: 0.03
+      L1B: 0.08
+      L2A: 0.15
+      L2B: 0.25
+      CB_ELIGIBLE: 0.12
+    fx_shock:
+      EUR: 0.0
+      USD: 0.15
+      GBP: 0.08
+    nmd_runoff_30d:
+      DEP_RET_STABLE: 0.06
+      DEP_RET_LESS: 0.15
+      DEP_RET_HIGHER: 0.3
+      DEP_OPER: 0.2
+    nmd_runoff_365d:
+      DEP_RET_STABLE: 0.18
+      DEP_RET_LESS: 0.35
+      DEP_RET_HIGHER: 0.6
+      DEP_OPER: 0.45
+    rollover:
+      DEP_RET_TERM: 0.6
+      DEP_CORP_NONOP: 0.2
+      DEP_FI: 0.0
+      IB_BORROW: 0.0
+      BOND_ISSUED: 0.0
+      COVERED_ISSUED: 0.0
+      LOAN_MORT: 0.95
+      LOAN_RET: 0.75
+      LOAN_SME: 0.75
+      LOAN_CORP: 0.7
+      IB_PLACE: 0.0
+    facility_drawdown_30d:
+      FAC_RET: 0.08
+      FAC_CORP_CREDIT: 0.25
+      FAC_CORP_LIQ: 0.45
+      FAC_FI: 0.55
+    facility_drawdown_365d:
+      FAC_RET: 0.14
+      FAC_CORP_CREDIT: 0.35
+      FAC_CORP_LIQ: 0.6
+      FAC_FI: 0.7
+    downgrade_notches: 3
+    collateral_per_notch_pct_assets: 0.003
+    mgmt_actions:
+      lending_cut:
+        start_day: 7
+        rollover_reduction: 0.4
+      asset_sale:
+        day: 21
+        pct_of_loans: 0.02
+        discount: 0.25
+    corp_dividend_suspended: 1
+validation:
+  base_lcr_range:
+  - 1.1
+  - 2.0
+  base_nsfr_min: 1.0
+  survival_min:
+    COMBINED: 90
+  survival_range:
+    EXTREME:
+    - 30
+    - 60
+  reverse_tolerance_days: 3
